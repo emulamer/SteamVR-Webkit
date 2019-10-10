@@ -449,26 +449,26 @@ namespace SteamVR_WebKit
             {
                 SteamVR_WebKit.OverlayManager.SetOverlayInputMethod(_handle, VROverlayInputMethod.Mouse);
                 SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.ShowTouchPadScrollWheel, EnableScrolling);
-                SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.SendVRScrollEvents, EnableScrolling);
+                SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.SendVRSmoothScrollEvents, EnableScrolling);
 
                 if(_hasBackSide)
                 {
                     SteamVR_WebKit.OverlayManager.SetOverlayInputMethod(_backSideHandle, VROverlayInputMethod.Mouse);
                     SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.ShowTouchPadScrollWheel, EnableScrolling);
-                    SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.SendVRScrollEvents, EnableScrolling);
+                    SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.SendVRSmoothScrollEvents, EnableScrolling);
                 }
             }
             else
             {
                 SteamVR_WebKit.OverlayManager.SetOverlayInputMethod(_handle, VROverlayInputMethod.None);
                 SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.ShowTouchPadScrollWheel, false);
-                SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.SendVRScrollEvents, false);
+                SteamVR_WebKit.OverlayManager.SetOverlayFlag(_handle, VROverlayFlags.SendVRSmoothScrollEvents, false);
 
                 if (_hasBackSide)
                 {
                     SteamVR_WebKit.OverlayManager.SetOverlayInputMethod(_backSideHandle, VROverlayInputMethod.None);
                     SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.ShowTouchPadScrollWheel, false);
-                    SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.SendVRScrollEvents, false);
+                    SteamVR_WebKit.OverlayManager.SetOverlayFlag(_backSideHandle, VROverlayFlags.SendVRSmoothScrollEvents, false);
                 }
             }
         }
@@ -486,7 +486,7 @@ namespace SteamVR_WebKit
 
         public void SetThumbnail(string filePath)
         {
-            SetThumbnailPath(System.IO.Path.IsPathRooted(filePath) ? filePath : Environment.CurrentDirectory + "\\" + filePath);
+            SetThumbnailPath(System.IO.Path.IsPathRooted(filePath) ? filePath : System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\" + filePath);
         }
 
         void UpdateWidth()

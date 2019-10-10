@@ -37,17 +37,17 @@ namespace SteamVR_WebKit
         OpenTK.Vector2 mouseClickPosition;
         bool brokeFromJitterThreshold = false;
 
-        public bool EnableTransparency {
-            get
-            {
-                return _browserSettings.OffScreenTransparentBackground.HasValue ? false : _browserSettings.OffScreenTransparentBackground.Value;
-            }
+        //public bool EnableTransparency {
+        //    get
+        //    {
+        //        return _browserSettings.OffScreenTransparentBackground.HasValue ? false : _browserSettings.OffScreenTransparentBackground.Value;
+        //    }
 
-            set
-            {
-                _browserSettings.OffScreenTransparentBackground = value;
-            }
-        }
+        //    set
+        //    {
+        //        _browserSettings.OffScreenTransparentBackground = value;
+        //    }
+        //}
 
         #region OGL Stuff
         int _glInputTextureId = 0;
@@ -140,11 +140,11 @@ namespace SteamVR_WebKit
 
         public bool EnableKeyboard { get; set; }
 
-        public BrowserSettings BrowserSettings
-        {
-            get { if (_browser != null) return _browser.BrowserSettings; else return _browserSettings; }
-            set { _browserSettings = value; }
-        }
+        //public BrowserSettings BrowserSettings
+        //{
+        //    get { if (_browser != null) return _browser.b`.BrowserSettings; else return _browserSettings; }
+        //    set { _browserSettings = value; }
+        //}
 
         public bool RenderInGameOverlay
         {
@@ -424,6 +424,8 @@ namespace SteamVR_WebKit
                 AsyncBrowser();
         }
 
+        private Bitmap _bitmap;
+        private object _bitmapLock = new object();
         protected virtual async void AsyncBrowser()
         {
             RequestContextSettings contextSettings = new RequestContextSettings()
@@ -444,11 +446,11 @@ namespace SteamVR_WebKit
                 Browser.RenderProcessMessageHandler = MessageHandler;
                 BrowserPreInit?.Invoke(_browser, new EventArgs());
                 _browser.Size = new Size((int)_windowWidth, (int)_windowHeight);
-                _browser.NewScreenshot += Browser_NewScreenshot;
+                //_browser.NewScreenshot += Browser_NewScreenshot;
 
                 _browser.BrowserInitialized += _browser_BrowserInitialized;
 
-                _browser.CreateBrowser(IntPtr.Zero);
+                _browser.CreateBrowser();
 
                 if (_zoomLevel > 1)
                 {
@@ -468,10 +470,32 @@ namespace SteamVR_WebKit
             ExecQueuedJS();
         }
 
+        //private void DoScreenshot()
+        //{
+        //    _browser.ScreenshotAsync().ContinueWith(x =>
+        //    {
+        //        _isRendering = true;
+
+        //        _browserDidUpdate = true;
+
+        //        lock (_bitmapLock)
+        //        {
+        //            _bitmap = x.Result;
+        //        }
+
+        //        BrowserRenderUpdate?.Invoke(this, new EventArgs());
+        //        DoScreenshot();
+        //    });
+        //}
+
         private void _browser_BrowserInitialized(object sender, EventArgs e)
         {
             SteamVR_WebKit.Log("Browser Initialised for " + _overlayKey);
             BrowserReady?.Invoke(_browser, new EventArgs());
+            // DoScreenshot();
+            _isRendering = true;
+
+            _browserDidUpdate = true;
         }
 
         public Task LoadPageAsync(ChromiumWebBrowser browser, string address = null)
@@ -505,17 +529,17 @@ namespace SteamVR_WebKit
             return tcs.Task;
         }
 
-        private void Browser_NewScreenshot(object sender, EventArgs e)
-        {
-            ChromiumWebBrowser browser = (ChromiumWebBrowser)sender;
+        //private void Browser_NewScreenshot(object sender, EventArgs e)
+        //{
+        //    ChromiumWebBrowser browser = (ChromiumWebBrowser)sender;
 
-            if (browser.Bitmap != null)
-                _isRendering = true;
+        //    if (browser.Bitmap != null)
+        //        _isRendering = true;
 
-            _browserDidUpdate = true;
+        //    _browserDidUpdate = true;
 
-            BrowserRenderUpdate?.Invoke(sender, e);
-        }
+        //    BrowserRenderUpdate?.Invoke(sender, e);
+        //}
 
         protected virtual void SetupTextures()
         {
@@ -619,14 +643,14 @@ namespace SteamVR_WebKit
 
             _browserDidUpdate = false;
 
-            if (_browser.Bitmap == null)
+            if (_bitmap == null)
                 return;
 
             if (AlphaMask != null)
             {
-                if (AlphaMask.Width != _browser.Bitmap.Width || AlphaMask.Height != _browser.Bitmap.Height)
+                if (AlphaMask.Width != _bitmap.Width || AlphaMask.Height != _bitmap.Height)
                 {
-                    AlphaMask = new Bitmap(AlphaMask, new Size(_browser.Bitmap.Width, _browser.Bitmap.Height));
+                    AlphaMask = new Bitmap(AlphaMask, new Size(_bitmap.Width, _bitmap.Height));
 
                     BitmapData alphaMapData = AlphaMask.LockBits(
                         new Rectangle(0, 0, AlphaMask.Width, AlphaMask.Height),
@@ -653,9 +677,9 @@ namespace SteamVR_WebKit
                 }
             }
 
-            lock (_browser.BitmapLock) {
-                BitmapData bmpData = _browser.Bitmap.LockBits(
-                    new Rectangle(0, 0, _browser.Bitmap.Width, _browser.Bitmap.Height),
+            lock (_bitmapLock) {
+                BitmapData bmpData = _bitmap.LockBits(
+                    new Rectangle(0, 0, _bitmap.Width, _bitmap.Height),
                     ImageLockMode.ReadWrite,
                     System.Drawing.Imaging.PixelFormat.Format32bppArgb
                     );
@@ -664,18 +688,18 @@ namespace SteamVR_WebKit
 
                 if (_dirtySize)
                 {
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _browser.Bitmap.Width, _browser.Bitmap.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _bitmap.Width, _bitmap.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
                     _dirtySize = false;
                 }
                 else
                 {
-                    GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, _browser.Bitmap.Width, _browser.Bitmap.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+                    GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, _bitmap.Width, _bitmap.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
                 }
 
                 if (SteamVR_WebKit.UseExperimentalOGL)
                 {
                     GL.BindFramebuffer(FramebufferTarget.Framebuffer, _glFrameBufferId);
-                    GL.Viewport(0, 0, _browser.Bitmap.Width, _browser.Bitmap.Height);
+                    GL.Viewport(0, 0, _bitmap.Width, _bitmap.Height);
                     GL.ClearColor(0,0,0,0);
                     GL.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -688,7 +712,7 @@ namespace SteamVR_WebKit
                     }
 
                     GL.Enable(EnableCap.Blend);
-                    GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.Zero);
+                    GL.BlendFunc(BlendingFactor.One, BlendingFactor.Zero);
 
                     DrawQuad();
 
@@ -707,7 +731,7 @@ namespace SteamVR_WebKit
                     GL.Disable(EnableCap.Blend);
                 }
 
-                _browser.Bitmap.UnlockBits(bmpData);
+                _bitmap.UnlockBits(bmpData);
                 //copyBitmap.UnlockBits(bmpData);
 
                 GL.BindTexture(TextureTarget.Texture2D, 0);
@@ -926,7 +950,7 @@ namespace SteamVR_WebKit
                     HandleMouseButtonUpEvent(eventData);
                     break;
 
-                case EVREventType.VREvent_Scroll:
+                case EVREventType.VREvent_ScrollSmooth:
                     if (_allowScrolling)
                         HandleMouseScrollEvent(eventData);
                     break;
@@ -940,10 +964,20 @@ namespace SteamVR_WebKit
                 return;
 
             PreDrawCallback?.Invoke(this, new EventArgs());
-
+            
+            var newbitmap =_browser.ScreenshotAsync().Result;
+            if (newbitmap != null)
+            {
+                if (_bitmap != null)
+                {
+                    _bitmap.Dispose();
+                }
+                _bitmap = newbitmap;
+                _browserDidUpdate = true;
+            }
             UpdateTexture();
 
-            if (_browser.Bitmap != null)
+            if (_bitmap != null)
             {
                 if (DashboardOverlay != null && DashboardOverlay.IsVisible())
                 {
@@ -1010,6 +1044,11 @@ namespace SteamVR_WebKit
 
             public void OnContextReleased(IWebBrowser browserControl, IBrowser browser, IFrame frame)
             {
+            }
+
+            public void OnUncaughtException(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, JavascriptException exception)
+            {
+                throw new NotImplementedException();
             }
         }
     }

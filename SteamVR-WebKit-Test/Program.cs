@@ -8,6 +8,7 @@ using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 using OpenTK;
+using CefSharp.OffScreen;
 
 namespace SteamVR_WebKit_Test
 {
@@ -29,13 +30,14 @@ namespace SteamVR_WebKit_Test
         {
             SteamVR_WebKit.SteamVR_WebKit.UseExperimentalOGL = true;
             SteamVR_WebKit.SteamVR_WebKit.DefaultFragmentShaderPath = Environment.CurrentDirectory + "\\Resources\\fragShader.frag";
-            SteamVR_WebKit.SteamVR_WebKit.Init(new CefSharp.CefSettings() { FocusedNodeChangedEnabled = true });
+            CefSharp.CefSharpSettings.FocusedNodeChangedEnabled = true;
+            SteamVR_WebKit.SteamVR_WebKit.Init(new CefSettings() { WindowlessRenderingEnabled = true,  });
             SteamVR_WebKit.SteamVR_WebKit.FPS = 30;
             SteamVR_WebKit.SteamVR_WebKit.LogEvent += SteamVR_WebKit_LogEvent;
 
             //Notifications.RegisterIcon("default", new Bitmap(Environment.CurrentDirectory + "\\Resources\\alert.png"));
-            basicOverlay = new WebKitOverlay(new Uri("https://netflix.com/login"), 1024, 1024, "webkitTest", "WebKit", OverlayType.Dashboard);
-            basicOverlay.DashboardOverlay.Width = 2.0f;
+            basicOverlay = new WebKitOverlay(new Uri("https://whyyouare.web.app"), 1280, 800, "webkitTest", "WebKit", OverlayType.Dashboard);
+            basicOverlay.DashboardOverlay.Width = 3.0f;
             basicOverlay.DashboardOverlay.SetThumbnail("Resources/webkit-logo.png");
             basicOverlay.BrowserPreInit += Overlay_BrowserPreInit;
             basicOverlay.BrowserReady += Overlay_BrowserReady;
@@ -88,7 +90,7 @@ namespace SteamVR_WebKit_Test
 
         private static void ApplicationsOverlay_BrowserPreInit(object sender, EventArgs e)
         {
-            applicationsOverlay.Browser.RegisterJsObject("applications", new SteamVR_WebKit.JsInterop.Applications());
+            applicationsOverlay.Browser.JavascriptObjectRepository.Register("applications", new SteamVR_WebKit.JsInterop.Applications());
         }
 
         private static void ApplicationsOverlay_BrowserReady(object sender, EventArgs e)
@@ -103,7 +105,7 @@ namespace SteamVR_WebKit_Test
 
         private static void VideoOverlay_BrowserPreInit(object sender, EventArgs e)
         {
-            //videoOverlay.Browser.RegisterJsObject("overlay", videoOverlay);
+            videoOverlay.Browser.JavascriptObjectRepository.Register("overlay", videoOverlay);
         }
 
         private static void ControllerOverlay_BrowserReady(object sender, EventArgs e)
@@ -113,7 +115,7 @@ namespace SteamVR_WebKit_Test
 
         private static void ControllerOverlay_BrowserPreInit(object sender, EventArgs e)
         {
-            controllerOverlay.Browser.RegisterJsObject("overlay", controllerOverlay);
+            controllerOverlay.Browser.JavascriptObjectRepository.Register("overlay", controllerOverlay);
         }
 
         private static void Overlay_BrowserReady(object sender, EventArgs e)
@@ -121,19 +123,19 @@ namespace SteamVR_WebKit_Test
             basicOverlay.Browser.GetBrowser().GetHost().ShowDevTools();
         }
 
-        private static void Browser_ConsoleMessage(object sender, CefSharp.ConsoleMessageEventArgs e)
-        {
-            string[] srcSplit = e.Source.Split('/'); // We only want the filename
-            SteamVR_WebKit.SteamVR_WebKit.Log("[CONSOLE " + srcSplit[srcSplit.Length - 1] + ":" + e.Line + "] " + e.Message);
-        }
+        //private static void Browser_ConsoleMessage(object sender, CefSharp.ConsoleMessageEventArgs e)
+        //{
+        //    string[] srcSplit = e.Source.Split('/'); // We only want the filename
+        //    SteamVR_WebKit.SteamVR_WebKit.Log("[CONSOLE " + srcSplit[srcSplit.Length - 1] + ":" + e.Line + "] " + e.Message);
+        //}
 
         private static void Overlay_BrowserPreInit(object sender, EventArgs e)
         {
             SteamVR_WebKit.SteamVR_WebKit.Log("Browser is ready.");
 
-            basicOverlay.Browser.ConsoleMessage += Browser_ConsoleMessage;
-            basicOverlay.Browser.RegisterJsObject("testObject", new JsCallbackTest());
-            basicOverlay.Browser.RegisterJsObject("notifications", new SteamVR_WebKit.JsInterop.Notifications(basicOverlay.DashboardOverlay));
+          //  basicOverlay.Browser.ConsoleMessage += Browser_ConsoleMessage;
+            basicOverlay.Browser.JavascriptObjectRepository.Register("testObject", new JsCallbackTest());
+            basicOverlay.Browser.JavascriptObjectRepository.Register("notifications", new SteamVR_WebKit.JsInterop.Notifications(basicOverlay.DashboardOverlay));
         }
     }
 }

@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using System.Threading;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using CefSharp.OffScreen;
 
 namespace SteamVR_WebKit
 {
@@ -92,6 +93,7 @@ namespace SteamVR_WebKit
 
         public static void Init(CefSettings settings = null)
         {
+            CefSharp.CefSharpSettings.FocusedNodeChangedEnabled = true;
             Overlays = new List<WebKitOverlay>();
 
             if (settings == null)
